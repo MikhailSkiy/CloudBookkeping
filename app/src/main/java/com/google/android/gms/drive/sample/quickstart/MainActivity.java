@@ -19,6 +19,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.IntentSender.SendIntentException;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -55,6 +56,10 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     private GoogleApiClient mGoogleApiClient;
     private Bitmap mBitmapToSave;
     private Button sendBtn_;
+    private Button contactBtn_;
+    private Button websiteBtn_;
+    private Button manageDriveBtn_;
+
 
     /**
      * Create a new file and save it to Drive.
@@ -113,12 +118,37 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         sendBtn_ = (Button) findViewById(R.id.sendBtn);
+        contactBtn_ = (Button) findViewById(R.id.contactBtn);
+        websiteBtn_ = (Button)findViewById(R.id.siteBtn);
+        manageDriveBtn_ = (Button)findViewById(R.id.manageBtn);
 
         sendBtn_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE),
                         REQUEST_CODE_CAPTURE_IMAGE);
+            }
+        });
+
+        websiteBtn_.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openBrowser();
+            }
+        });
+
+
+        contactBtn_.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openEmailApp();
+            }
+        });
+
+        manageDriveBtn_.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openDrive();
             }
         });
 
@@ -209,5 +239,42 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     @Override
     public void onConnectionSuspended(int cause) {
         Log.i(TAG, "GoogleApiClient connection suspended");
+    }
+
+    private void openEmailApp(){
+        Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+        emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        emailIntent.setType("vnd.android.cursor.item/email");
+        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] {"will@cloudbookkeep.com"});
+        emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "My Email Subject");
+        emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "My email content");
+        startActivity(Intent.createChooser(emailIntent, "Send mail using..."));
+    }
+
+    private void openBrowser(){
+        Uri url = Uri.parse("http://www.cloudbookkeep.com/");
+        Intent intent = new Intent(Intent.ACTION_VIEW, url);
+
+        if (intent.resolveActivity(getPackageManager()) != null){
+            startActivity(intent);
+        } else {
+            Log.d("MainActivity", "Couldn't call because no receiving apps installed!");
+        }
+    }
+
+    private void openDrive(){
+        MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder().build();
+        // Create an intent for the file chooser, and start it.
+        IntentSender intentSender = Drive.DriveApi
+                .newCreateFileActivityBuilder()
+                .setInitialMetadata(metadataChangeSet)
+                .build(mGoogleApiClient);
+
+        try {
+            startIntentSenderForResult(
+                    intentSender, REQUEST_CODE_CREATOR, null, 0, 0, 0);
+        } catch (SendIntentException e) {
+            Log.i(TAG, "Failed to launch file chooser.");
+        }
     }
 }
