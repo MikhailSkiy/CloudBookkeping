@@ -52,6 +52,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     private static final int REQUEST_CODE_CAPTURE_IMAGE = 1;
     private static final int REQUEST_CODE_CREATOR = 2;
     private static final int REQUEST_CODE_RESOLUTION = 3;
+    private static final int REQUEST_CODE_MANAGE = 4;
 
     private GoogleApiClient mGoogleApiClient;
     private Bitmap mBitmapToSave;
@@ -202,6 +203,8 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
 //                            REQUEST_CODE_CAPTURE_IMAGE);
                 }
                 break;
+
+
         }
     }
 
@@ -262,19 +265,32 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         }
     }
 
-    private void openDrive(){
-        MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder().build();
-        // Create an intent for the file chooser, and start it.
-        IntentSender intentSender = Drive.DriveApi
-                .newCreateFileActivityBuilder()
-                .setInitialMetadata(metadataChangeSet)
-                .build(mGoogleApiClient);
+//    private void openDrive(){
+//        MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder().build();
+//        // Create an intent for the file chooser, and start it.
+//        IntentSender intentSender = Drive.DriveApi
+//                .newCreateFileActivityBuilder()
+//                .setInitialMetadata(metadataChangeSet)
+//                .build(mGoogleApiClient);
+//
+//        try {
+//            startIntentSenderForResult(
+//                    intentSender, REQUEST_CODE_CREATOR, null, 0, 0, 0);
+//        } catch (SendIntentException e) {
+//            Log.i(TAG, "Failed to launch file chooser.");
+//        }
+//    }
 
+    private void openDrive(){
+        IntentSender intentSender = Drive.DriveApi
+                .newOpenFileActivityBuilder()
+                .setMimeType(new String[] { "text/plain", "text/html","image/jpeg" })
+                .build(mGoogleApiClient);
         try {
             startIntentSenderForResult(
-                    intentSender, REQUEST_CODE_CREATOR, null, 0, 0, 0);
+                    intentSender, REQUEST_CODE_MANAGE, null, 0, 0, 0);
         } catch (SendIntentException e) {
-            Log.i(TAG, "Failed to launch file chooser.");
+            Log.w(TAG, "Unable to send intent", e);
         }
     }
 }
