@@ -23,6 +23,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
@@ -54,12 +57,15 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     private static final int REQUEST_CODE_RESOLUTION = 3;
     private static final int REQUEST_CODE_MANAGE = 4;
 
-    private GoogleApiClient mGoogleApiClient;
+    private static GoogleApiClient mGoogleApiClient;
     private Bitmap mBitmapToSave;
     private Button sendBtn_;
+    private Button receiveBtn_;
+
     private Button contactBtn_;
     private Button websiteBtn_;
     private Button manageDriveBtn_;
+    private Button callBtn_;
 
 
     /**
@@ -72,45 +78,45 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         Drive.DriveApi.newDriveContents(mGoogleApiClient)
                 .setResultCallback(new ResultCallback<DriveContentsResult>() {
 
-            @Override
-            public void onResult(DriveContentsResult result) {
-                // If the operation was not successful, we cannot do anything
-                // and must
-                // fail.
-                if (!result.getStatus().isSuccess()) {
-                    Log.i(TAG, "Failed to create new contents.");
-                    return;
-                }
-                // Otherwise, we can write our data to the new contents.
-                Log.i(TAG, "New contents created.");
-                // Get an output stream for the contents.
-                OutputStream outputStream = result.getDriveContents().getOutputStream();
-                // Write the bitmap data from it.
-                ByteArrayOutputStream bitmapStream = new ByteArrayOutputStream();
-                image.compress(Bitmap.CompressFormat.PNG, 100, bitmapStream);
-                try {
-                    outputStream.write(bitmapStream.toByteArray());
-                } catch (IOException e1) {
-                    Log.i(TAG, "Unable to write file contents.");
-                }
-                // Create the initial metadata - MIME type and title.
-                // Note that the user will be able to change the title later.
-                MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
-                        .setMimeType("image/jpeg").setTitle("Android Photo.png").build();
-                // Create an intent for the file chooser, and start it.
-                IntentSender intentSender = Drive.DriveApi
-                        .newCreateFileActivityBuilder()
-                        .setInitialMetadata(metadataChangeSet)
-                        .setInitialDriveContents(result.getDriveContents())
-                        .build(mGoogleApiClient);
-                try {
-                    startIntentSenderForResult(
-                            intentSender, REQUEST_CODE_CREATOR, null, 0, 0, 0);
-                } catch (SendIntentException e) {
-                    Log.i(TAG, "Failed to launch file chooser.");
-                }
-            }
-        });
+                    @Override
+                    public void onResult(DriveContentsResult result) {
+                        // If the operation was not successful, we cannot do anything
+                        // and must
+                        // fail.
+                        if (!result.getStatus().isSuccess()) {
+                            Log.i(TAG, "Failed to create new contents.");
+                            return;
+                        }
+                        // Otherwise, we can write our data to the new contents.
+                        Log.i(TAG, "New contents created.");
+                        // Get an output stream for the contents.
+                        OutputStream outputStream = result.getDriveContents().getOutputStream();
+                        // Write the bitmap data from it.
+                        ByteArrayOutputStream bitmapStream = new ByteArrayOutputStream();
+                        image.compress(Bitmap.CompressFormat.PNG, 100, bitmapStream);
+                        try {
+                            outputStream.write(bitmapStream.toByteArray());
+                        } catch (IOException e1) {
+                            Log.i(TAG, "Unable to write file contents.");
+                        }
+                        // Create the initial metadata - MIME type and title.
+                        // Note that the user will be able to change the title later.
+                        MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
+                                .setMimeType("image/jpeg").setTitle("Android Photo.png").build();
+                        // Create an intent for the file chooser, and start it.
+                        IntentSender intentSender = Drive.DriveApi
+                                .newCreateFileActivityBuilder()
+                                .setInitialMetadata(metadataChangeSet)
+                                .setInitialDriveContents(result.getDriveContents())
+                                .build(mGoogleApiClient);
+                        try {
+                            startIntentSenderForResult(
+                                    intentSender, REQUEST_CODE_CREATOR, null, 0, 0, 0);
+                        } catch (SendIntentException e) {
+                            Log.i(TAG, "Failed to launch file chooser.");
+                        }
+                    }
+                });
     }
 
 
@@ -119,15 +125,26 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         sendBtn_ = (Button) findViewById(R.id.sendBtn);
+        receiveBtn_ = (Button)findViewById(R.id.receiveBtn);
+
         contactBtn_ = (Button) findViewById(R.id.contactBtn);
         websiteBtn_ = (Button)findViewById(R.id.siteBtn);
         manageDriveBtn_ = (Button)findViewById(R.id.manageBtn);
 
+
         sendBtn_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE),
-                        REQUEST_CODE_CAPTURE_IMAGE);
+                Intent intent = new Intent(MainActivity.this,SendActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        receiveBtn_.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,ReceiveActivity.class);
+                startActivity(intent);
             }
         });
 
@@ -182,31 +199,11 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         super.onPause();
     }
 
-    @Override
-    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        switch (requestCode) {
-            case REQUEST_CODE_CAPTURE_IMAGE:
-                // Called after a photo has been taken.
-                if (resultCode == Activity.RESULT_OK) {
-                    // Store the image data as a bitmap for writing later.
-                    mBitmapToSave = (Bitmap) data.getExtras().get("data");
-                    saveFileToDrive();
-                }
-                break;
-            case REQUEST_CODE_CREATOR:
-                // Called after a file is saved to Drive.
-                if (resultCode == RESULT_OK) {
-                    Log.i(TAG, "Image successfully saved.");
-                    mBitmapToSave = null;
-                    // Just start the camera again for another photo.
-//                    startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE),
-//                            REQUEST_CODE_CAPTURE_IMAGE);
-                }
-                break;
-
-
-        }
+    public static GoogleApiClient getGoogleApiClient(){
+        return mGoogleApiClient;
     }
+
+
 
     @Override
     public void onConnectionFailed(ConnectionResult result) {
@@ -244,6 +241,56 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         Log.i(TAG, "GoogleApiClient connection suspended");
     }
 
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle presses on the action bar items
+        switch (item.getItemId()) {
+            case R.id.visit_web_site_action:
+                openBrowser();
+                return true;
+
+            case R.id.manage_drive_action:
+                openDrive();
+                return true;
+
+            case R.id.qbo_login_action:
+                openQboLoginForm();
+                return true;
+
+            case R.id.call_action:
+                call();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+//    private void openDrive(){
+//        MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder().build();
+//        // Create an intent for the file chooser, and start it.
+//        IntentSender intentSender = Drive.DriveApi
+//                .newCreateFileActivityBuilder()
+//                .setInitialMetadata(metadataChangeSet)
+//                .build(mGoogleApiClient);
+//
+//        try {
+//            startIntentSenderForResult(
+//                    intentSender, REQUEST_CODE_CREATOR, null, 0, 0, 0);
+//        } catch (SendIntentException e) {
+//            Log.i(TAG, "Failed to launch file chooser.");
+//        }
+//    }
+
     private void openEmailApp(){
         Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
         emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -265,22 +312,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         }
     }
 
-//    private void openDrive(){
-//        MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder().build();
-//        // Create an intent for the file chooser, and start it.
-//        IntentSender intentSender = Drive.DriveApi
-//                .newCreateFileActivityBuilder()
-//                .setInitialMetadata(metadataChangeSet)
-//                .build(mGoogleApiClient);
-//
-//        try {
-//            startIntentSenderForResult(
-//                    intentSender, REQUEST_CODE_CREATOR, null, 0, 0, 0);
-//        } catch (SendIntentException e) {
-//            Log.i(TAG, "Failed to launch file chooser.");
-//        }
-//    }
-
     private void openDrive(){
         IntentSender intentSender = Drive.DriveApi
                 .newOpenFileActivityBuilder()
@@ -292,5 +323,22 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         } catch (SendIntentException e) {
             Log.w(TAG, "Unable to send intent", e);
         }
+    }
+
+    private void openQboLoginForm(){
+        Uri url = Uri.parse("https://qbo.intuit.com/qbo30/login?webredir/");
+        Intent intent = new Intent(Intent.ACTION_VIEW, url);
+
+        if (intent.resolveActivity(getPackageManager()) != null){
+            startActivity(intent);
+        } else {
+            Log.d("MainActivity", "Couldn't call because no receiving apps installed!");
+        }
+    }
+
+    private void call(){
+        String phone = "+34666777888";
+        Intent intent = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phone, null));
+        startActivity(intent);
     }
 }

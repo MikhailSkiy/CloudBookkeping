@@ -1,0 +1,29 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="com.google.android.gms.drive.sample.quickstart.SendActivity">
+    <item
+        android:id="@+id/visit_web_site_action"
+        android:orderInCategory="100"
+        android:title="@string/visit_web_site_action"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/manage_drive_action"
+        android:orderInCategory="100"
+        android:title="@string/manage_drive_action"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/qbo_login_action"
+        android:orderInCategory="100"
+        android:title="@string/qbo_login_action"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/call_action"
+        android:orderInCategory="100"
+        android:title="@string/call_action"
+        app:showAsAction="never"/>
+
+</menu>

@@ -17,9 +17,30 @@
 <resources>
 
     <string name="app_name">Google Drive Android APP</string>
-    <string name="title_activity_menu">MenuActivity</string>
+    <string name="send_activity_title">Send</string>
+    <string name="receive_activity_title">Receive</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+
+    <!-- Values for actionbar menu -->
+    <string name="visit_web_site_action">Visit website</string>
+    <string name="manage_drive_action">Manage drive</string>
+    <string name="qbo_login_action">QBO login</string>
+    <string name="call_action">Call</string>
+
+    <!-- Values for send activity -->
+    <string name="send_email_text">Send Email</string>
+    <string name="upload_file_to_drive_text">Upload File to Drive</string>
+    <string name="send_task_request_text">Send Task Request</string>
+
+    <string name="succesfull_uploading">The file was uploaded successfully</string>
+
+    <!-- Values for receive activity -->
+    <string name="bank_query_text">Bank query</string>
+    <string name="reminders_text">Reminders</string>
+    <string name="reports_text">Reports</string>
+
+
 
 </resources>
