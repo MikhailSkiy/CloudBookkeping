@@ -17,9 +17,13 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
+import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
+import com.google.android.gms.drive.DriveResource;
+import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.drive.OpenFileActivityBuilder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -40,6 +44,7 @@ public class SendActivity extends Activity {
     private static final int REQUEST_CODE_CREATOR = 2;
     private static final int REQUEST_CODE_RESOLUTION = 3;
     private static final int REQUEST_CODE_MANAGE = 4;
+    private static final int REQUEST_CODE_OPENER = 5;
 
     private static GoogleApiClient mGoogleApiClient;
     private Bitmap mBitmapToSave;
@@ -115,9 +120,41 @@ public class SendActivity extends Activity {
                 }
                 break;
 
+            case REQUEST_CODE_OPENER:
+                if (resultCode == RESULT_OK) {
+                    DriveId driveId = (DriveId) data.getParcelableExtra(
+                            OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
+//                    DriveFolder reportsFolder = Drive.DriveApi.getFolder(mGoogleApiClient,driveId);
+//                    DriveId driveId = result.getDriveId();
+                    DriveFile file = driveId.asDriveFile();
+                    file.getMetadata(mGoogleApiClient)
+                            .setResultCallback(metadataCallback);
+                   // reportsFolder.listChildren(mGoogleApiClient).setResultCallback(reportsResultCallback);
+                   // showMessage("Selected file's ID: " + driveId);
+                }
+                //finish();
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
+
 
         }
-    }
+
+    final private ResultCallback<DriveResource.MetadataResult> metadataCallback = new
+            ResultCallback<DriveResource.MetadataResult>() {
+                @Override
+                public void onResult(DriveResource.MetadataResult result) {
+                    if (!result.getStatus().isSuccess()) {
+//                        showMessage("Problem while trying to fetch metadata");
+                        return;
+                    }
+                    Metadata metadata = result.getMetadata();
+                    Log.v("Link",metadata.getEmbedLink());
+                    openGoogleForm(metadata.getEmbedLink());
+                }
+            };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,11 +183,20 @@ public class SendActivity extends Activity {
         sendTaskRequestBtn_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getTaskFolder();
+               // getTaskFolder();
+                openTaskFolder();
             }
         });
 
     }
+    @Override
+    protected void onResume(){
+        super.onResume();
+        if(!(mGoogleApiClient == null)){
+            mGoogleApiClient.connect();
+        }
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -168,6 +214,36 @@ public class SendActivity extends Activity {
         emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "My email content");
         startActivity(Intent.createChooser(emailIntent, "Send mail using..."));
     }
+
+    private void openTaskFolder() {
+        Drive.DriveApi.newDriveContents(mGoogleApiClient)
+                .setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
+
+                    @Override
+                    public void onResult(DriveApi.DriveContentsResult result) {
+                        // If the operation was not successful, we cannot do anything
+                        // and must
+                        // fail.
+                        if (!result.getStatus().isSuccess()) {
+                            Log.i(TAG, "Failed to create new contents.");
+                            return;
+                        }
+
+                        // Create an intent for the file chooser, and start it.
+                        IntentSender intentSender = Drive.DriveApi
+                                .newOpenFileActivityBuilder()
+                                .setMimeType(new String[]{"application/vnd.google-apps.form","application/vnd.google-apps.spreadsheet"})
+                                .build(mGoogleApiClient);
+                        try {
+                            startIntentSenderForResult(
+                                    intentSender, REQUEST_CODE_OPENER, null, 0, 0, 0);
+                        } catch (IntentSender.SendIntentException e) {
+                            Log.i(TAG, "Failed to launch file chooser.");
+                        }
+                    }
+                });
+    }
+
 
     private void getTaskFolder(){
         DriveFolder folder = Drive.DriveApi.getRootFolder(mGoogleApiClient);

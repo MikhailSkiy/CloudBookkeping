@@ -37,9 +37,9 @@
     <string name="succesfull_uploading">The file was uploaded successfully</string>
 
     <!-- Values for receive activity -->
-    <string name="bank_query_text">Bank query</string>
+    <string name="bank_query_text">Answer bank query</string>
     <string name="reminders_text">Reminders</string>
-    <string name="reports_text">Reports</string>
+    <string name="reports_text">View reports</string>
 
 
 
