@@ -15,19 +15,27 @@
 package com.google.android.gms.drive.sample.quickstart;
 
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.IntentSender.SendIntentException;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -36,8 +44,15 @@ import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveApi.DriveContentsResult;
+import com.google.android.gms.drive.DriveFolder;
+import com.google.android.gms.drive.DriveId;
+import com.google.android.gms.drive.DriveResource;
+import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.drive.events.ChangeEvent;
+import com.google.android.gms.drive.events.ChangeListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -52,10 +67,13 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         OnConnectionFailedListener {
 
     private static final String TAG = "drive-quickstart";
+    private DriveId folderId_;
+
     private static final int REQUEST_CODE_CAPTURE_IMAGE = 1;
     private static final int REQUEST_CODE_CREATOR = 2;
     private static final int REQUEST_CODE_RESOLUTION = 3;
     private static final int REQUEST_CODE_MANAGE = 4;
+
 
     private static GoogleApiClient mGoogleApiClient;
     private Bitmap mBitmapToSave;
@@ -67,6 +85,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     private Button manageDriveBtn_;
     private Button callBtn_;
 
+    private View view_;
 
     /**
      * Create a new file and save it to Drive.
@@ -89,6 +108,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
                         }
                         // Otherwise, we can write our data to the new contents.
                         Log.i(TAG, "New contents created.");
+
                         // Get an output stream for the contents.
                         OutputStream outputStream = result.getDriveContents().getOutputStream();
                         // Write the bitmap data from it.
@@ -99,6 +119,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
                         } catch (IOException e1) {
                             Log.i(TAG, "Unable to write file contents.");
                         }
+
                         // Create the initial metadata - MIME type and title.
                         // Note that the user will be able to change the title later.
                         MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
@@ -124,6 +145,9 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        view_ = findViewById(android.R.id.content);
+
         sendBtn_ = (Button) findViewById(R.id.sendBtn);
         receiveBtn_ = (Button)findViewById(R.id.receiveBtn);
 
@@ -171,6 +195,8 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         });
 
     }
+
+
 
     @Override
     protected void onResume() {
@@ -239,6 +265,114 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     @Override
     public void onConnectionSuspended(int cause) {
         Log.i(TAG, "GoogleApiClient connection suspended");
+    }
+
+    private void setListenerToReportsFolder(){
+        DriveFolder folder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
+        folder.listChildren(mGoogleApiClient).setResultCallback(childrenRetrievedCallback);
+    }
+
+    ResultCallback<DriveApi.MetadataBufferResult> childrenRetrievedCallback = new
+            ResultCallback<DriveApi.MetadataBufferResult>() {
+                @Override
+                public void onResult(DriveApi.MetadataBufferResult result) {
+                    if (!result.getStatus().isSuccess()) {
+                        Toast.makeText(MainActivity.this, "Problem while retrieving folders", Toast.LENGTH_LONG);
+                        Log.v(TAG,"Problem while retrieving folders");
+                        return;
+                    }
+
+                    for (int i=0;i<result.getMetadataBuffer().getCount();i++){
+                        String originalFileName = result.getMetadataBuffer().get(i).getOriginalFilename();
+                        Log.v(TAG, originalFileName);
+                        if (originalFileName.equals("Reports")) {
+                            folderId_ = result.getMetadataBuffer().get(i).getDriveId();
+                            DriveFolder reportsFolder = Drive.DriveApi.getFolder(mGoogleApiClient,folderId_);
+                           reportsFolder.addChangeListener(mGoogleApiClient,changeListener);
+                            break;
+                        }
+                    }
+
+                }
+            };
+
+    /**
+     * A listener to handle file change events.
+     */
+    final private ChangeListener changeListener = new ChangeListener() {
+        @Override
+        public void onChange(ChangeEvent event) {
+            sendNotification(view_);
+        }
+    };
+
+    public void sendNotification(View view) {
+
+        // BEGIN_INCLUDE(build_action)
+        /** Create an intent that will be fired when the user clicks the notification.
+         * The intent needs to be packaged into a {@link android.app.PendingIntent} so that the
+         * notification service can fire it on our behalf.
+         */
+
+        Intent intent = new Intent(MainActivity.this,  ReceiveActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        // END_INCLUDE(build_action)
+
+        // BEGIN_INCLUDE (build_notification)
+        /**
+         * Use NotificationCompat.Builder to set up our notification.
+         */
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this);
+
+        /** Set the icon that will appear in the notification bar. This icon also appears
+         * in the lower right hand corner of the notification itself.
+         *
+         * Important note: although you can use any drawable as the small icon, Android
+         * design guidelines state that the icon should be simple and monochrome. Full-color
+         * bitmaps or busy images don't render well on smaller screens and can end up
+         * confusing the user.
+         */
+        builder.setSmallIcon(R.drawable.ic_launcher);
+
+        // Set the intent that will fire when the user taps the notification.
+        builder.setContentIntent(pendingIntent);
+
+        // Set the notification to auto-cancel. This means that the notification will disappear
+        // after the user taps it, rather than remaining until it's explicitly dismissed.
+        builder.setAutoCancel(true);
+
+        /**
+         *Build the notification's appearance.
+         * Set the large icon, which appears on the left of the notification. In this
+         * sample we'll set the large icon to be the same as our app icon. The app icon is a
+         * reasonable default if you don't have anything more compelling to use as an icon.
+         */
+        builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
+
+        /**
+         * Set the text of the notification. This sample sets the three most commononly used
+         * text areas:
+         * 1. The content title, which appears in large type at the top of the notification
+         * 2. The content text, which appears in smaller text below the title
+         * 3. The subtext, which appears under the text on newer devices. Devices running
+         *    versions of Android prior to 4.2 will ignore this field, so don't use it for
+         *    anything vital!
+         */
+        builder.setContentTitle("BasicNotifications Sample");
+        builder.setContentText("Time to learn about notifications!");
+        builder.setSubText("Tap to view documentation about notifications.");
+
+        // END_INCLUDE (build_notification)
+
+        // BEGIN_INCLUDE(send_notification)
+        /**
+         * Send the notification. This will immediately display the notification icon in the
+         * notification bar.
+         */
+        NotificationManager notificationManager = (NotificationManager) MainActivity.this.getSystemService(
+                Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(0, builder.build());
+        // END_INCLUDE(send_notification)
     }
 
 

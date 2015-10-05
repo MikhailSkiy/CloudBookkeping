@@ -17,6 +17,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
+import com.google.android.gms.drive.DriveFolder;
+import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.MetadataChangeSet;
 
 import java.io.ByteArrayOutputStream;
@@ -27,6 +29,9 @@ import java.io.OutputStream;
 public class SendActivity extends Activity {
 
     private static final String TAG = "drive-quickstart";
+    private DriveId folderId_;
+    private String link_;
+
     private Button sendEmailBtn_;
     private Button uploadToDriveBtn_;
     private Button sendTaskRequestBtn_;
@@ -141,7 +146,7 @@ public class SendActivity extends Activity {
         sendTaskRequestBtn_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openGoogleForm();
+                getTaskFolder();
             }
         });
 
@@ -164,9 +169,65 @@ public class SendActivity extends Activity {
         startActivity(Intent.createChooser(emailIntent, "Send mail using..."));
     }
 
-    private void openGoogleForm(){
-//        Uri url = Uri.parse("http://goo.gl/forms/dWusDMbHle");
-        Uri url = Uri.parse("http://goo.gl/forms/Z9FPs1TsVC");
+    private void getTaskFolder(){
+        DriveFolder folder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
+        folder.listChildren(mGoogleApiClient).setResultCallback(childrenRetrievedCallback);
+    }
+
+    ResultCallback<DriveApi.MetadataBufferResult> childrenRetrievedCallback = new
+            ResultCallback<DriveApi.MetadataBufferResult>() {
+                @Override
+                public void onResult(DriveApi.MetadataBufferResult result) {
+                    if (!result.getStatus().isSuccess()) {
+                        Toast.makeText(SendActivity.this, "Problem while retrieving folders", Toast.LENGTH_LONG);
+                        Log.v(TAG,"Problem while retrieving folders");
+                        return;
+                    }
+
+                    for (int i=0;i<result.getMetadataBuffer().getCount();i++){
+                        String originalFileName = result.getMetadataBuffer().get(i).getOriginalFilename();
+                        Log.v(TAG, originalFileName);
+                        if (originalFileName.equals("Reports")) {
+                            folderId_ = result.getMetadataBuffer().get(i).getDriveId();
+                            DriveFolder reportsFolder = Drive.DriveApi.getFolder(mGoogleApiClient,folderId_);
+                            reportsFolder.listChildren(mGoogleApiClient).setResultCallback(reportsResultCallback);
+                            link_ = result.getMetadataBuffer().get(i).getWebViewLink();
+                            break;
+                        }
+                    }
+
+                }
+            };
+
+    ResultCallback<DriveApi.MetadataBufferResult> reportsResultCallback = new ResultCallback<DriveApi.MetadataBufferResult>() {
+        @Override
+        public void onResult(DriveApi.MetadataBufferResult metadataBufferResult) {
+            if (!metadataBufferResult.getStatus().isSuccess()) {
+                Toast.makeText(SendActivity.this, "Problem while retrieving files", Toast.LENGTH_LONG);
+                Log.v(TAG, "Problem while retrieving files");
+                return;
+            }
+            String filesCount = Integer.toString(metadataBufferResult.getMetadataBuffer().getCount());
+            Log.v(TAG,filesCount);
+
+            // for (int i=0;i<metadataBufferResult.getMetadataBuffer().getCount();i++){
+            String reportFileName = metadataBufferResult.getMetadataBuffer().get(0).getOriginalFilename();
+            Log.v("File name", reportFileName );
+
+            String reportFileTitle = metadataBufferResult.getMetadataBuffer().get(0).getTitle();
+            Log.v("File title", reportFileTitle );
+
+            String fileLink = metadataBufferResult.getMetadataBuffer().get(0).getWebViewLink();
+            Log.v("File link", fileLink );
+            // }
+
+            openGoogleForm(fileLink);
+        }
+    };
+
+    private void openGoogleForm(String link){
+        Uri url = Uri.parse(link);
+       // Uri url = Uri.parse("http://goo.gl/forms/Z9FPs1TsVC");
         Intent intent = new Intent(Intent.ACTION_VIEW, url);
 
         if (intent.resolveActivity(getPackageManager()) != null){
