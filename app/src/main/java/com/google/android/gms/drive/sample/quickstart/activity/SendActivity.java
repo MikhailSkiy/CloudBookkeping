@@ -1,4 +1,4 @@
-package com.google.android.gms.drive.sample.quickstart;
+package com.google.android.gms.drive.sample.quickstart.activity;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -24,6 +24,7 @@ import com.google.android.gms.drive.DriveResource;
 import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.MetadataChangeSet;
 import com.google.android.gms.drive.OpenFileActivityBuilder;
+import com.google.android.gms.drive.sample.quickstart.R;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,19 +33,20 @@ import java.io.OutputStream;
 
 public class SendActivity extends Activity {
 
+    private static final int REQUEST_CODE_CAPTURE_IMAGE = 1;
+    private static final int REQUEST_CODE_CREATOR = 2;
+    private static final int REQUEST_CODE_RESOLUTION = 3;
+    private static final int REQUEST_CODE_MANAGE = 4;
+    private static final int REQUEST_CODE_OPENER = 5;
+
     private static final String TAG = "drive-quickstart";
+
     private DriveId folderId_;
     private String link_;
 
     private Button sendEmailBtn_;
     private Button uploadToDriveBtn_;
     private Button sendTaskRequestBtn_;
-
-    private static final int REQUEST_CODE_CAPTURE_IMAGE = 1;
-    private static final int REQUEST_CODE_CREATOR = 2;
-    private static final int REQUEST_CODE_RESOLUTION = 3;
-    private static final int REQUEST_CODE_MANAGE = 4;
-    private static final int REQUEST_CODE_OPENER = 5;
 
     private static GoogleApiClient mGoogleApiClient;
     private Bitmap mBitmapToSave;
@@ -113,10 +115,8 @@ public class SendActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     Log.i(TAG, "Image successfully saved.");
                     mBitmapToSave = null;
-                    Toast.makeText(this,getResources().getString(R.string.succesfull_uploading),Toast.LENGTH_SHORT);
-                    // Just start the camera again for another photo.
-//                    startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE),
-//                            REQUEST_CODE_CAPTURE_IMAGE);
+                    Toast.makeText(this, getResources().getString(R.string.succesfull_uploading), Toast.LENGTH_SHORT);
+
                 }
                 break;
 
@@ -124,22 +124,15 @@ public class SendActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     DriveId driveId = (DriveId) data.getParcelableExtra(
                             OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
-//                    DriveFolder reportsFolder = Drive.DriveApi.getFolder(mGoogleApiClient,driveId);
-//                    DriveId driveId = result.getDriveId();
                     DriveFile file = driveId.asDriveFile();
                     file.getMetadata(mGoogleApiClient)
                             .setResultCallback(metadataCallback);
-                   // reportsFolder.listChildren(mGoogleApiClient).setResultCallback(reportsResultCallback);
-                   // showMessage("Selected file's ID: " + driveId);
                 }
-                //finish();
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
-
-
-        }
+    }
 
     final private ResultCallback<DriveResource.MetadataResult> metadataCallback = new
             ResultCallback<DriveResource.MetadataResult>() {

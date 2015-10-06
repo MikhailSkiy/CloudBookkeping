@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package com.google.android.gms.drive.sample.quickstart;
+package com.google.android.gms.drive.sample.quickstart.activity;
 
 import android.app.Activity;
 import android.app.NotificationManager;
@@ -25,10 +25,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,11 +45,10 @@ import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveApi.DriveContentsResult;
 import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
-import com.google.android.gms.drive.DriveResource;
-import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.MetadataChangeSet;
 import com.google.android.gms.drive.events.ChangeEvent;
 import com.google.android.gms.drive.events.ChangeListener;
+import com.google.android.gms.drive.sample.quickstart.R;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -66,14 +62,13 @@ import java.io.OutputStream;
 public class MainActivity extends Activity implements ConnectionCallbacks,
         OnConnectionFailedListener {
 
-    private static final String TAG = "drive-quickstart";
-    private DriveId folderId_;
-
     private static final int REQUEST_CODE_CAPTURE_IMAGE = 1;
     private static final int REQUEST_CODE_CREATOR = 2;
     private static final int REQUEST_CODE_RESOLUTION = 3;
     private static final int REQUEST_CODE_MANAGE = 4;
 
+    private static final String TAG = "drive-quickstart";
+    private DriveId folderId_;
 
     private static GoogleApiClient mGoogleApiClient;
     private Bitmap mBitmapToSave;
@@ -307,72 +302,24 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     };
 
     public void sendNotification(View view) {
-
-        // BEGIN_INCLUDE(build_action)
-        /** Create an intent that will be fired when the user clicks the notification.
-         * The intent needs to be packaged into a {@link android.app.PendingIntent} so that the
-         * notification service can fire it on our behalf.
-         */
-
         Intent intent = new Intent(MainActivity.this,  ReceiveActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        // END_INCLUDE(build_action)
-
-        // BEGIN_INCLUDE (build_notification)
-        /**
-         * Use NotificationCompat.Builder to set up our notification.
-         */
         NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this);
-
-        /** Set the icon that will appear in the notification bar. This icon also appears
-         * in the lower right hand corner of the notification itself.
-         *
-         * Important note: although you can use any drawable as the small icon, Android
-         * design guidelines state that the icon should be simple and monochrome. Full-color
-         * bitmaps or busy images don't render well on smaller screens and can end up
-         * confusing the user.
-         */
         builder.setSmallIcon(R.drawable.ic_launcher);
-
         // Set the intent that will fire when the user taps the notification.
         builder.setContentIntent(pendingIntent);
-
         // Set the notification to auto-cancel. This means that the notification will disappear
         // after the user taps it, rather than remaining until it's explicitly dismissed.
         builder.setAutoCancel(true);
-
-        /**
-         *Build the notification's appearance.
-         * Set the large icon, which appears on the left of the notification. In this
-         * sample we'll set the large icon to be the same as our app icon. The app icon is a
-         * reasonable default if you don't have anything more compelling to use as an icon.
-         */
         builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
 
-        /**
-         * Set the text of the notification. This sample sets the three most commononly used
-         * text areas:
-         * 1. The content title, which appears in large type at the top of the notification
-         * 2. The content text, which appears in smaller text below the title
-         * 3. The subtext, which appears under the text on newer devices. Devices running
-         *    versions of Android prior to 4.2 will ignore this field, so don't use it for
-         *    anything vital!
-         */
         builder.setContentTitle("BasicNotifications Sample");
         builder.setContentText("Time to learn about notifications!");
         builder.setSubText("Tap to view documentation about notifications.");
 
-        // END_INCLUDE (build_notification)
-
-        // BEGIN_INCLUDE(send_notification)
-        /**
-         * Send the notification. This will immediately display the notification icon in the
-         * notification bar.
-         */
         NotificationManager notificationManager = (NotificationManager) MainActivity.this.getSystemService(
                 Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0, builder.build());
-        // END_INCLUDE(send_notification)
     }
 
 
@@ -404,52 +351,46 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
                 call();
                 return true;
 
+            case R.id.settings_action:
+                Intent intent = new Intent(MainActivity.this,SettingsActivity.class);
+                startActivity(intent);
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-//    private void openDrive(){
-//        MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder().build();
-//        // Create an intent for the file chooser, and start it.
-//        IntentSender intentSender = Drive.DriveApi
-//                .newCreateFileActivityBuilder()
-//                .setInitialMetadata(metadataChangeSet)
-//                .build(mGoogleApiClient);
-//
-//        try {
-//            startIntentSenderForResult(
-//                    intentSender, REQUEST_CODE_CREATOR, null, 0, 0, 0);
-//        } catch (SendIntentException e) {
-//            Log.i(TAG, "Failed to launch file chooser.");
-//        }
-//    }
-
-    private void openEmailApp(){
+    private void openEmailApp() {
         Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
         emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         emailIntent.setType("vnd.android.cursor.item/email");
-        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] {"will@cloudbookkeep.com"});
+        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"will@cloudbookkeep.com"});
         emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "My Email Subject");
         emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "My email content");
-        startActivity(Intent.createChooser(emailIntent, "Send mail using..."));
-    }
-
-    private void openBrowser(){
-        Uri url = Uri.parse("http://www.cloudbookkeep.com/");
-        Intent intent = new Intent(Intent.ACTION_VIEW, url);
-
-        if (intent.resolveActivity(getPackageManager()) != null){
-            startActivity(intent);
+        if (emailIntent.resolveActivity(getPackageManager()) != null) {
+            startActivity(Intent.createChooser(emailIntent, "Send mail using..."));
         } else {
             Log.d("MainActivity", "Couldn't call because no receiving apps installed!");
+            Toast.makeText(this, "Couldn't call because no receiving apps installed!", Toast.LENGTH_SHORT);
         }
     }
 
-    private void openDrive(){
+    private void openBrowser() {
+        Uri url = Uri.parse("http://www.cloudbookkeep.com/");
+        Intent intent = new Intent(Intent.ACTION_VIEW, url);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            Log.d("MainActivity", "Couldn't call because no receiving apps installed!");
+            Toast.makeText(this, "Couldn't call because no receiving apps installed!", Toast.LENGTH_SHORT);
+        }
+    }
+
+    private void openDrive() {
         IntentSender intentSender = Drive.DriveApi
                 .newOpenFileActivityBuilder()
-                .setMimeType(new String[] { "text/plain", "text/html","image/jpeg" })
+                .setMimeType(new String[]{"text/plain", "text/html", "image/jpeg"})
                 .build(mGoogleApiClient);
         try {
             startIntentSenderForResult(
@@ -462,11 +403,11 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     private void openQboLoginForm(){
         Uri url = Uri.parse("https://qbo.intuit.com/qbo30/login?webredir/");
         Intent intent = new Intent(Intent.ACTION_VIEW, url);
-
-        if (intent.resolveActivity(getPackageManager()) != null){
+        if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         } else {
             Log.d("MainActivity", "Couldn't call because no receiving apps installed!");
+            Toast.makeText(this, "Couldn't call because no receiving apps installed!", Toast.LENGTH_SHORT);
         }
     }
 

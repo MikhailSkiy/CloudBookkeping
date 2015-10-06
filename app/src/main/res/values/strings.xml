@@ -28,6 +28,7 @@
     <string name="manage_drive_action">Manage drive</string>
     <string name="qbo_login_action">QBO login</string>
     <string name="call_action">Call</string>
+    <string name="settings_action">Settings</string>
 
     <!-- Values for send activity -->
     <string name="send_email_text">Send Email</string>
@@ -40,6 +41,10 @@
     <string name="bank_query_text">Answer bank query</string>
     <string name="reminders_text">Reminders</string>
     <string name="reports_text">View reports</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <!-- Values for settings activity -->
+    <string name="enable_report_listening">Select folder for listening updates</string>
 
 
 
