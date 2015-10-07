@@ -37,9 +37,9 @@
 
     <!-- Values for settings activity -->
     <string name="enable_report_listening">Select folder for listening reports updates</string>
-    <string name="enable_query_listening">Select folder for listening queries updates</string>
+    <string name="enable_query_listening">Select file for listening queries updates</string>
     <string name="reports_folder_listener_status">Reports folder was selected for listening updates</string>
-    <string name="queries_folder_listener_status">Bank query folder was selected for listening updates</string>
+    <string name="queries_folder_listener_status">Bank query file was selected for listening updates</string>
     <string name="folder_listener_tip">Please select folders for receiving updates. Reports - for reports updates. Bank query - for bank queries updates</string>
 
 

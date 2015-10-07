@@ -3,7 +3,6 @@ package com.google.android.gms.drive.sample.quickstart.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -65,7 +64,7 @@ public class SettingsActivity extends Activity {
         enableQueryBtn_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            selectFolderForQueryListening();
+            selectFileForQueryListening();
             }
         });
     }
@@ -111,7 +110,7 @@ public class SettingsActivity extends Activity {
                 });
     }
 
-    private void selectFolderForQueryListening(){
+    private void selectFileForQueryListening(){
         Drive.DriveApi.newDriveContents(mGoogleApiClient)
                 .setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
 
@@ -128,7 +127,7 @@ public class SettingsActivity extends Activity {
                         // Create an intent for the file chooser, and start it.
                         IntentSender intentSender = Drive.DriveApi
                                 .newOpenFileActivityBuilder()
-                                .setMimeType(new String[]{"application/vnd.google-apps.folder"})
+                                .setMimeType(new String[]{"application/vnd.google-apps.spreadsheet"})
                                 .build(mGoogleApiClient);
                         try {
                             startIntentSenderForResult(
@@ -205,10 +204,10 @@ public class SettingsActivity extends Activity {
             return;
         }
         synchronized (mSubscriptionStatusLock) {
-            DriveFolder folder = Drive.DriveApi.getFolder(mGoogleApiClient,mQueryFileId);
+            DriveFile file = Drive.DriveApi.getFile(mGoogleApiClient, mQueryFileId);
             Log.d(TAG, "Starting to listen to the file changes.");
             // file.addChangeListener(mGoogleApiClient, changeListener);
-            folder.addChangeSubscription(mGoogleApiClient);
+            file.addChangeSubscription(mGoogleApiClient);
             isSubscribed = true;
             enableQueryBtn_.setText(getResources().getString(R.string.enable_query_listening)+ " (enabled)");
         }
