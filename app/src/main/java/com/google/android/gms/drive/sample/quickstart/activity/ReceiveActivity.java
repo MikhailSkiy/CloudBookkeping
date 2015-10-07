@@ -24,12 +24,15 @@ import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
+import com.google.android.gms.drive.DriveResource;
+import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.OpenFileActivityBuilder;
 import com.google.android.gms.drive.events.ChangeEvent;
 import com.google.android.gms.drive.events.ChangeListener;
 import com.google.android.gms.drive.sample.quickstart.R;
 
 import static com.google.android.gms.drive.DriveApi.*;
+import static com.google.android.gms.drive.DriveResource.*;
 
 public class ReceiveActivity extends Activity {
 
@@ -64,13 +67,14 @@ public class ReceiveActivity extends Activity {
         view_ = findViewById(android.R.id.content);
         mGoogleApiClient = MainActivity.getGoogleApiClient();
 
-        bankQueryBtn_ = (Button)findViewById(R.id.bank_query_btn);
-        reminderBtn_ = (Button)findViewById(R.id.reminder_btn);
-        viewReportsBtn_ = (Button)findViewById(R.id.reports_btn);
+        bankQueryBtn_ = (Button) findViewById(R.id.bank_query_btn);
+        reminderBtn_ = (Button) findViewById(R.id.reminder_btn);
+        viewReportsBtn_ = (Button) findViewById(R.id.reports_btn);
 
         viewReportsBtn_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                openReports();
 
             }
         });
@@ -78,9 +82,9 @@ public class ReceiveActivity extends Activity {
     }
 
     @Override
-    protected void onResume(){
+    protected void onResume() {
         super.onResume();
-        if(!(mGoogleApiClient == null)){
+        if (!(mGoogleApiClient == null)) {
             mGoogleApiClient.connect();
         }
     }
@@ -91,14 +95,43 @@ public class ReceiveActivity extends Activity {
             case REQUEST_CODE_OPENER:
                 if (resultCode == RESULT_OK) {
                     mSelectedFileId = (DriveId) data.getParcelableExtra(OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
+                    DriveFile selectedPdfReport = Drive.DriveApi.getFile(mGoogleApiClient, mSelectedFileId);
+                    selectedPdfReport.getMetadata(mGoogleApiClient).setResultCallback(metadataRetrievedCallback);
 
-                    toggle();
+
                 }
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
+    ResultCallback<DriveResource.MetadataResult> metadataRetrievedCallback = new
+            ResultCallback<DriveResource.MetadataResult>() {
+                @Override
+                public void onResult(MetadataResult result) {
+                    if (!result.getStatus().isSuccess()) {
+                        Log.i(TAG, "Failed to get metadata.");
+                        return;
+                    }
+                    Metadata metadata = result.getMetadata();
+                    Log.i(TAG, "Metadata was retrieved successfully.");
+                    openPdf(metadata.getWebContentLink());
+                }
+            };
+
+    private void openPdf(String link){
+        Uri url = Uri.parse(link);
+        // Uri url = Uri.parse("http://goo.gl/forms/Z9FPs1TsVC");
+        Intent intent = new Intent(Intent.ACTION_VIEW, url);
+
+        if (intent.resolveActivity(getPackageManager()) != null){
+            startActivity(intent);
+        } else {
+            Log.d("MainActivity", "Couldn't call because no receiving apps installed!");
+        }
+    }
+
 
 
 
@@ -122,6 +155,36 @@ public class ReceiveActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    private void openReports() {
+        Drive.DriveApi.newDriveContents(mGoogleApiClient)
+                .setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
+
+                    @Override
+                    public void onResult(DriveApi.DriveContentsResult result) {
+                        // If the operation was not successful, we cannot do anything
+                        // and must
+                        // fail.
+                        if (!result.getStatus().isSuccess()) {
+                            Log.i(TAG, "Failed to create new contents.");
+                            return;
+                        }
+
+                        // Create an intent for the file chooser, and start it.
+                        IntentSender intentSender = Drive.DriveApi
+                                .newOpenFileActivityBuilder()
+                                .setMimeType(new String[]{"application/pdf"})
+                                .build(mGoogleApiClient);
+                        try {
+                            startIntentSenderForResult(
+                                    intentSender, REQUEST_CODE_OPENER, null, 0, 0, 0);
+                        } catch (IntentSender.SendIntentException e) {
+                            Log.i(TAG, "Failed to launch file chooser.");
+                        }
+                    }
+                });
     }
 
     /**

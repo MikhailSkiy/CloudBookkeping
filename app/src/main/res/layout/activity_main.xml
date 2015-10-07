@@ -1,28 +1,28 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="com.google.android.gms.drive.sample.quickstart.activity.MainActivity">
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              android:paddingBottom="@dimen/activity_vertical_margin"
+              android:paddingLeft="@dimen/activity_horizontal_margin"
+              android:paddingRight="@dimen/activity_horizontal_margin"
+              android:paddingTop="@dimen/activity_vertical_margin"
+              tools:context="com.google.android.gms.drive.sample.quickstart.activity.MainActivity">
 
 
     <Button
+        android:id="@+id/send_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send"
         android:layout_weight="1"
-        android:id="@+id/sendBtn" />
+        android:text="Send"/>
 
     <Button
+        android:id="@+id/receive_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Receive"
         android:layout_weight="1"
-        android:id="@+id/receiveBtn" />
+        android:text="Receive"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -30,25 +30,25 @@
         android:orientation="horizontal">
 
         <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="0.5"
-        android:text="Contact"
-        android:id="@+id/contactBtn" />
-
-        <Button
+            android:id="@+id/call_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:text="Visit Website"
-            android:id="@+id/siteBtn" />
+            android:text="@string/call_btn_text"/>
 
         <Button
+            android:id="@+id/site_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:text="Manage Drive"
-            android:id="@+id/manageBtn" />
+            android:text="@string/visit_web_btn_text"/>
+
+        <Button
+            android:id="@+id/manage_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:text="@string/manage_drive_btn_text"/>
 
 
     </LinearLayout>

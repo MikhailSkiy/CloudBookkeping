@@ -1,20 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Copyright 2013 Google, Inc
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
--->
-<resources>
+    <resources>
 
     <string name="app_name">Google Drive Android APP</string>
     <string name="send_activity_title">Send</string>
@@ -22,6 +7,11 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+
+    <!-- Values for main activity buttons -->
+    <string name="call_btn_text">Call</string>
+    <string name="visit_web_btn_text">Visit Website</string>
+    <string name="manage_drive_btn_text">Manage Drive</string>
 
     <!-- Values for actionbar menu -->
     <string name="visit_web_site_action">Visit website</string>
@@ -36,6 +26,8 @@
     <string name="send_task_request_text">Send Task Request</string>
 
     <string name="succesfull_uploading">The file was uploaded successfully</string>
+    <string name="choose_send_folder_tip">Please select "Send (To Do)" folder and after todo google form</string>
+    <string name="choose_file_name_tip">Please upload file in the recommended format (like 20/5/15.bankstatement.png</string>
 
     <!-- Values for receive activity -->
     <string name="bank_query_text">Answer bank query</string>
@@ -44,8 +36,11 @@
     <string name="title_activity_settings">SettingsActivity</string>
 
     <!-- Values for settings activity -->
-    <string name="enable_report_listening">Select folder for listening updates</string>
-
+    <string name="enable_report_listening">Select folder for listening reports updates</string>
+    <string name="enable_query_listening">Select folder for listening queries updates</string>
+    <string name="reports_folder_listener_status">Reports folder was selected for listening updates</string>
+    <string name="queries_folder_listener_status">Bank query folder was selected for listening updates</string>
+    <string name="folder_listener_tip">Please select folders for receiving updates. Reports - for reports updates. Bank query - for bank queries updates</string>
 
 
 </resources>

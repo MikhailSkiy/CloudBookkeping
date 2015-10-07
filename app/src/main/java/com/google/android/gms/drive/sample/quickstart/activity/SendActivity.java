@@ -6,6 +6,7 @@ import android.content.IntentSender;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
@@ -25,6 +26,7 @@ import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.MetadataChangeSet;
 import com.google.android.gms.drive.OpenFileActivityBuilder;
 import com.google.android.gms.drive.sample.quickstart.R;
+import com.google.android.gms.drive.sample.quickstart.util.Toaster;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,9 +39,10 @@ public class SendActivity extends Activity {
     private static final int REQUEST_CODE_CREATOR = 2;
     private static final int REQUEST_CODE_RESOLUTION = 3;
     private static final int REQUEST_CODE_MANAGE = 4;
-    private static final int REQUEST_CODE_OPENER = 5;
+    private static final int REQUEST_CODE_OPEN_TODO_FORM = 5;
 
     private static final String TAG = "drive-quickstart";
+    private static final int LONG_DELAY = 3500;
 
     private DriveId folderId_;
     private String link_;
@@ -82,7 +85,7 @@ public class SendActivity extends Activity {
                         // Create the initial metadata - MIME type and title.
                         // Note that the user will be able to change the title later.
                         MetadataChangeSet metadataChangeSet = new MetadataChangeSet.Builder()
-                                .setMimeType("image/jpeg").setTitle("Android Photo.png").build();
+                                .setMimeType("image/jpeg").setTitle("Date.Expense.png").build();
                         // Create an intent for the file chooser, and start it.
                         IntentSender intentSender = Drive.DriveApi
                                 .newCreateFileActivityBuilder()
@@ -97,6 +100,9 @@ public class SendActivity extends Activity {
                         }
                     }
                 });
+
+        Toaster.makeLongToast(SendActivity.this, getResources().getString(R.string.choose_file_name_tip), 15000);
+//       Toast.makeText(SendActivity.this, getResources().getString(R.string.choose_file_name_tip), Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -115,12 +121,11 @@ public class SendActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     Log.i(TAG, "Image successfully saved.");
                     mBitmapToSave = null;
-                    Toast.makeText(this, getResources().getString(R.string.succesfull_uploading), Toast.LENGTH_SHORT);
-
+                    Toast.makeText(this, getResources().getString(R.string.succesfull_uploading), Toast.LENGTH_LONG).show();
                 }
                 break;
 
-            case REQUEST_CODE_OPENER:
+            case REQUEST_CODE_OPEN_TODO_FORM:
                 if (resultCode == RESULT_OK) {
                     DriveId driveId = (DriveId) data.getParcelableExtra(
                             OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
@@ -143,7 +148,7 @@ public class SendActivity extends Activity {
                         return;
                     }
                     Metadata metadata = result.getMetadata();
-                    Log.v("Link",metadata.getEmbedLink());
+                    Log.v("Link", metadata.getEmbedLink());
                     openGoogleForm(metadata.getEmbedLink());
                 }
             };
@@ -154,10 +159,11 @@ public class SendActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send);
         sendEmailBtn_ = (Button) findViewById(R.id.send_email_btn);
-        uploadToDriveBtn_ = (Button)findViewById(R.id.upload_file_btn);
-        sendTaskRequestBtn_ = (Button)findViewById(R.id.send_task_btn);
+        uploadToDriveBtn_ = (Button) findViewById(R.id.upload_file_btn);
+        sendTaskRequestBtn_ = (Button) findViewById(R.id.send_task_btn);
         mGoogleApiClient = MainActivity.getGoogleApiClient();
 
+        // Send Email button
         sendEmailBtn_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -165,6 +171,7 @@ public class SendActivity extends Activity {
             }
         });
 
+        // Upload File to Drive
         uploadToDriveBtn_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -173,19 +180,22 @@ public class SendActivity extends Activity {
             }
         });
 
+        // Send Task Request
         sendTaskRequestBtn_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               // getTaskFolder();
+                Toaster.makeLongToast(SendActivity.this,  getResources().getString(R.string.choose_send_folder_tip),15000);
+               // Toast.makeText(SendActivity.this, getResources().getString(R.string.choose_send_folder_tip), Toast.LENGTH_LONG).show();
                 openTaskFolder();
             }
         });
 
     }
+
     @Override
-    protected void onResume(){
+    protected void onResume() {
         super.onResume();
-        if(!(mGoogleApiClient == null)){
+        if (!(mGoogleApiClient == null)) {
             mGoogleApiClient.connect();
         }
     }
@@ -198,25 +208,24 @@ public class SendActivity extends Activity {
         return true;
     }
 
-    private void openEmailApp(){
+    // Opens all app which able to send Email
+    private void openEmailApp() {
         Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
         emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         emailIntent.setType("vnd.android.cursor.item/email");
-        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[] {"will@cloudbookkeep.com"});
+        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"will@cloudbookkeep.com"});
         emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "My Email Subject");
         emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "My email content");
         startActivity(Intent.createChooser(emailIntent, "Send mail using..."));
     }
 
+    // Opens Google Drive file chooser where user can open "To Do" Folder and select Google Form with to do tasks
     private void openTaskFolder() {
         Drive.DriveApi.newDriveContents(mGoogleApiClient)
                 .setResultCallback(new ResultCallback<DriveApi.DriveContentsResult>() {
 
                     @Override
                     public void onResult(DriveApi.DriveContentsResult result) {
-                        // If the operation was not successful, we cannot do anything
-                        // and must
-                        // fail.
                         if (!result.getStatus().isSuccess()) {
                             Log.i(TAG, "Failed to create new contents.");
                             return;
@@ -225,11 +234,11 @@ public class SendActivity extends Activity {
                         // Create an intent for the file chooser, and start it.
                         IntentSender intentSender = Drive.DriveApi
                                 .newOpenFileActivityBuilder()
-                                .setMimeType(new String[]{"application/vnd.google-apps.form","application/vnd.google-apps.spreadsheet"})
+                                .setMimeType(new String[]{"application/vnd.google-apps.form", "application/vnd.google-apps.spreadsheet"})
                                 .build(mGoogleApiClient);
                         try {
                             startIntentSenderForResult(
-                                    intentSender, REQUEST_CODE_OPENER, null, 0, 0, 0);
+                                    intentSender, REQUEST_CODE_OPEN_TODO_FORM, null, 0, 0, 0);
                         } catch (IntentSender.SendIntentException e) {
                             Log.i(TAG, "Failed to launch file chooser.");
                         }
@@ -238,68 +247,12 @@ public class SendActivity extends Activity {
     }
 
 
-    private void getTaskFolder(){
-        DriveFolder folder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
-        folder.listChildren(mGoogleApiClient).setResultCallback(childrenRetrievedCallback);
-    }
-
-    ResultCallback<DriveApi.MetadataBufferResult> childrenRetrievedCallback = new
-            ResultCallback<DriveApi.MetadataBufferResult>() {
-                @Override
-                public void onResult(DriveApi.MetadataBufferResult result) {
-                    if (!result.getStatus().isSuccess()) {
-                        Toast.makeText(SendActivity.this, "Problem while retrieving folders", Toast.LENGTH_LONG);
-                        Log.v(TAG,"Problem while retrieving folders");
-                        return;
-                    }
-
-                    for (int i=0;i<result.getMetadataBuffer().getCount();i++){
-                        String originalFileName = result.getMetadataBuffer().get(i).getOriginalFilename();
-                        Log.v(TAG, originalFileName);
-                        if (originalFileName.equals("Reports")) {
-                            folderId_ = result.getMetadataBuffer().get(i).getDriveId();
-                            DriveFolder reportsFolder = Drive.DriveApi.getFolder(mGoogleApiClient,folderId_);
-                            reportsFolder.listChildren(mGoogleApiClient).setResultCallback(reportsResultCallback);
-                            link_ = result.getMetadataBuffer().get(i).getWebViewLink();
-                            break;
-                        }
-                    }
-
-                }
-            };
-
-    ResultCallback<DriveApi.MetadataBufferResult> reportsResultCallback = new ResultCallback<DriveApi.MetadataBufferResult>() {
-        @Override
-        public void onResult(DriveApi.MetadataBufferResult metadataBufferResult) {
-            if (!metadataBufferResult.getStatus().isSuccess()) {
-                Toast.makeText(SendActivity.this, "Problem while retrieving files", Toast.LENGTH_LONG);
-                Log.v(TAG, "Problem while retrieving files");
-                return;
-            }
-            String filesCount = Integer.toString(metadataBufferResult.getMetadataBuffer().getCount());
-            Log.v(TAG,filesCount);
-
-            // for (int i=0;i<metadataBufferResult.getMetadataBuffer().getCount();i++){
-            String reportFileName = metadataBufferResult.getMetadataBuffer().get(0).getOriginalFilename();
-            Log.v("File name", reportFileName );
-
-            String reportFileTitle = metadataBufferResult.getMetadataBuffer().get(0).getTitle();
-            Log.v("File title", reportFileTitle );
-
-            String fileLink = metadataBufferResult.getMetadataBuffer().get(0).getWebViewLink();
-            Log.v("File link", fileLink );
-            // }
-
-            openGoogleForm(fileLink);
-        }
-    };
-
-    private void openGoogleForm(String link){
+    // Opens google form in the web browser
+    private void openGoogleForm(String link) {
         Uri url = Uri.parse(link);
-       // Uri url = Uri.parse("http://goo.gl/forms/Z9FPs1TsVC");
         Intent intent = new Intent(Intent.ACTION_VIEW, url);
 
-        if (intent.resolveActivity(getPackageManager()) != null){
+        if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         } else {
             Log.d("MainActivity", "Couldn't call because no receiving apps installed!");

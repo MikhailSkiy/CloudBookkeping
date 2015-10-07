@@ -54,11 +54,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-/**
- * Android Drive Quickstart activity. This activity takes a photo and saves it
- * in Google Drive. The user is prompted with a pre-made dialog which allows
- * them to choose the file location.
- */
 public class MainActivity extends Activity implements ConnectionCallbacks,
         OnConnectionFailedListener {
 
@@ -75,10 +70,10 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     private Button sendBtn_;
     private Button receiveBtn_;
 
-    private Button contactBtn_;
+    private Button callBtn_;
     private Button websiteBtn_;
     private Button manageDriveBtn_;
-    private Button callBtn_;
+
 
     private View view_;
 
@@ -143,12 +138,12 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
 
         view_ = findViewById(android.R.id.content);
 
-        sendBtn_ = (Button) findViewById(R.id.sendBtn);
-        receiveBtn_ = (Button)findViewById(R.id.receiveBtn);
+        sendBtn_ = (Button) findViewById(R.id.send_btn);
+        receiveBtn_ = (Button)findViewById(R.id.receive_btn);
 
-        contactBtn_ = (Button) findViewById(R.id.contactBtn);
-        websiteBtn_ = (Button)findViewById(R.id.siteBtn);
-        manageDriveBtn_ = (Button)findViewById(R.id.manageBtn);
+        callBtn_ = (Button) findViewById(R.id.call_btn);
+        websiteBtn_ = (Button)findViewById(R.id.site_btn);
+        manageDriveBtn_ = (Button)findViewById(R.id.manage_btn);
 
 
         sendBtn_.setOnClickListener(new View.OnClickListener() {
@@ -175,10 +170,10 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         });
 
 
-        contactBtn_.setOnClickListener(new View.OnClickListener() {
+        callBtn_.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openEmailApp();
+                call();
             }
         });
 
@@ -262,66 +257,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         Log.i(TAG, "GoogleApiClient connection suspended");
     }
 
-    private void setListenerToReportsFolder(){
-        DriveFolder folder = Drive.DriveApi.getRootFolder(mGoogleApiClient);
-        folder.listChildren(mGoogleApiClient).setResultCallback(childrenRetrievedCallback);
-    }
-
-    ResultCallback<DriveApi.MetadataBufferResult> childrenRetrievedCallback = new
-            ResultCallback<DriveApi.MetadataBufferResult>() {
-                @Override
-                public void onResult(DriveApi.MetadataBufferResult result) {
-                    if (!result.getStatus().isSuccess()) {
-                        Toast.makeText(MainActivity.this, "Problem while retrieving folders", Toast.LENGTH_LONG);
-                        Log.v(TAG,"Problem while retrieving folders");
-                        return;
-                    }
-
-                    for (int i=0;i<result.getMetadataBuffer().getCount();i++){
-                        String originalFileName = result.getMetadataBuffer().get(i).getOriginalFilename();
-                        Log.v(TAG, originalFileName);
-                        if (originalFileName.equals("Reports")) {
-                            folderId_ = result.getMetadataBuffer().get(i).getDriveId();
-                            DriveFolder reportsFolder = Drive.DriveApi.getFolder(mGoogleApiClient,folderId_);
-                           reportsFolder.addChangeListener(mGoogleApiClient,changeListener);
-                            break;
-                        }
-                    }
-
-                }
-            };
-
-    /**
-     * A listener to handle file change events.
-     */
-    final private ChangeListener changeListener = new ChangeListener() {
-        @Override
-        public void onChange(ChangeEvent event) {
-            sendNotification(view_);
-        }
-    };
-
-    public void sendNotification(View view) {
-        Intent intent = new Intent(MainActivity.this,  ReceiveActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this);
-        builder.setSmallIcon(R.drawable.ic_launcher);
-        // Set the intent that will fire when the user taps the notification.
-        builder.setContentIntent(pendingIntent);
-        // Set the notification to auto-cancel. This means that the notification will disappear
-        // after the user taps it, rather than remaining until it's explicitly dismissed.
-        builder.setAutoCancel(true);
-        builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher));
-
-        builder.setContentTitle("BasicNotifications Sample");
-        builder.setContentText("Time to learn about notifications!");
-        builder.setSubText("Tap to view documentation about notifications.");
-
-        NotificationManager notificationManager = (NotificationManager) MainActivity.this.getSystemService(
-                Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(0, builder.build());
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -361,21 +296,6 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
         }
     }
 
-    private void openEmailApp() {
-        Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
-        emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        emailIntent.setType("vnd.android.cursor.item/email");
-        emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"will@cloudbookkeep.com"});
-        emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "My Email Subject");
-        emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, "My email content");
-        if (emailIntent.resolveActivity(getPackageManager()) != null) {
-            startActivity(Intent.createChooser(emailIntent, "Send mail using..."));
-        } else {
-            Log.d("MainActivity", "Couldn't call because no receiving apps installed!");
-            Toast.makeText(this, "Couldn't call because no receiving apps installed!", Toast.LENGTH_SHORT);
-        }
-    }
-
     private void openBrowser() {
         Uri url = Uri.parse("http://www.cloudbookkeep.com/");
         Intent intent = new Intent(Intent.ACTION_VIEW, url);
@@ -412,7 +332,7 @@ public class MainActivity extends Activity implements ConnectionCallbacks,
     }
 
     private void call(){
-        String phone = "+34666777888";
+        String phone = "0413435237";
         Intent intent = new Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", phone, null));
         startActivity(intent);
     }
