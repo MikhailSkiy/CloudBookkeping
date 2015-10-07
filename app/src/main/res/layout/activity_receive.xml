@@ -9,26 +9,55 @@
               android:paddingTop="@dimen/activity_vertical_margin"
               tools:context="com.google.android.gms.drive.sample.quickstart.activity.ReceiveActivity">
 
-    <Button
-        android:id="@+id/bank_query_btn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="@string/bank_query_text"/>
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content">
 
+        <Button
+            android:id="@+id/bank_query_btn"
+            android:layout_width="match_parent"
+            android:layout_height="178dp"
+            android:layout_weight="1"
+            android:text="@string/bank_query_text"/>
+
+        <ImageView
+            android:id="@+id/bank_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|center"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_alert_circle_grey"
+            android:visibility="invisible"/>
+
+    </FrameLayout>
 
     <Button
         android:id="@+id/reminder_btn"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_height="168dp"
+
         android:text="@string/reminders_text"/>
 
-    <Button
-        android:id="@+id/reports_btn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="@string/reports_text"/>
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                 android:layout_width="match_parent"
+                 android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/reports_btn"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="@string/reports_text"/>
+
+        <ImageView
+            android:id="@+id/reports_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|center"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_alert_circle_grey"
+            android:visibility="invisible"/>
+
+    </FrameLayout>
 
 </LinearLayout>

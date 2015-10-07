@@ -28,16 +28,19 @@ public class MyDriveEventService extends DriveEventService {
 
         Log.d("MyDriveEventService", "Change event: " + event);
         DriveId resourseId = event.getDriveId();
-        if (resourseId.equals(SettingsActivity.mSelectedFileId)){
-            sendNotification(REPORTS_NOTIFICATION);
-        } else if (resourseId.equals(SettingsActivity.mQueryFileId)){
-            sendNotification(QUERIES_NOTIFICATION);
+        String id = event.getDriveId().toString();
+
+        if (resourseId.equals(SettingsActivity.selectedFolderId_)){
+            sendNotification(REPORTS_NOTIFICATION,id);
+        } else if (resourseId.equals(SettingsActivity.bankQueryFileId_)){
+            sendNotification(QUERIES_NOTIFICATION,id);
         }
 
     }
 
-    private void sendNotification(int notificationType) {
+    private void sendNotification(int notificationType,String id) {
         Intent intent = new Intent(this,  ReceiveActivity.class);
+        intent.putExtra(getString(R.string.id_key),id);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         builder.setSmallIcon(R.drawable.ic_launcher);

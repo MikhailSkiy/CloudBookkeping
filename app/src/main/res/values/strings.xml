@@ -42,5 +42,8 @@
     <string name="queries_folder_listener_status">Bank query file was selected for listening updates</string>
     <string name="folder_listener_tip">Please select folders for receiving updates. Reports - for reports updates. Bank query - for bank queries updates</string>
 
+    <!-- Values for service -->
+    <string name="id_key">id</string>
+
 
 </resources>

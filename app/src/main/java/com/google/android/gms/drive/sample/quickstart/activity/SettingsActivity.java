@@ -1,8 +1,10 @@
 package com.google.android.gms.drive.sample.quickstart.activity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -30,13 +32,16 @@ public class SettingsActivity extends Activity {
     private static final int REQUEST_CODE_QUERY = 6;
 
     private static final String TAG = "ReceiveActivity";
+
+    private static final String REPORTS_FOLDER = "reports_folder_id";
+    private static final String BANK_QUERY_FILE = "bank_query_id_file";
     private static GoogleApiClient mGoogleApiClient;
 
     /**
      * Represents the file picked by the user.
      */
-    public static DriveId mSelectedFileId;
-    public static DriveId mQueryFileId;
+    public static DriveId selectedFolderId_;
+    public static DriveId bankQueryFileId_;
 
     /**
      * Keeps the status whether change events are being listened to or not.
@@ -139,21 +144,32 @@ public class SettingsActivity extends Activity {
                 });
     }
 
+    private void writeId(String key, String id){
+        SharedPreferences.Editor prefs = this.getSharedPreferences(
+                "com.example.app", Context.MODE_PRIVATE).edit();
+        prefs.putString(key, id);
+        prefs.commit();
+    }
+
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         switch (requestCode) {
             case REQUEST_CODE_OPENER:
                 if (resultCode == RESULT_OK) {
-                    mSelectedFileId = (DriveId) data.getParcelableExtra(OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
-                    Log.i("Id", mSelectedFileId.toString() );
+                    selectedFolderId_ = (DriveId) data.getParcelableExtra(OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
+                    // Write id of folder in SharedPreferences
+                    writeId(REPORTS_FOLDER, selectedFolderId_.toString());
+                    Log.i("Id", selectedFolderId_.toString());
                     toggle();
                 }
                 break;
 
             case REQUEST_CODE_QUERY:
                 if (resultCode == RESULT_OK) {
-                    mQueryFileId= (DriveId) data.getParcelableExtra(OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
-                    Log.i("Id", mQueryFileId.toString());
+                    bankQueryFileId_ = (DriveId) data.getParcelableExtra(OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
+                    // Write Id in SharedPreferences
+                    writeId(BANK_QUERY_FILE, bankQueryFileId_.toString());
+                    Log.i("Id", bankQueryFileId_.toString());
                     toggle2();
                 }
                 break;
@@ -167,11 +183,11 @@ public class SettingsActivity extends Activity {
      * immediately.
      */
     private void toggle() {
-        if (mSelectedFileId == null) {
+        if (selectedFolderId_ == null) {
             return;
         }
         synchronized (mSubscriptionStatusLock) {
-             DriveFolder folder = Drive.DriveApi.getFolder(mGoogleApiClient,mSelectedFileId);
+             DriveFolder folder = Drive.DriveApi.getFolder(mGoogleApiClient, selectedFolderId_);
             Log.d(TAG, "Starting to listen to the file changes.");
             // file.addChangeListener(mGoogleApiClient, changeListener);
             folder.addChangeSubscription(mGoogleApiClient);
@@ -200,11 +216,11 @@ public class SettingsActivity extends Activity {
      * immediately.
      */
     private void toggle2() {
-        if (mQueryFileId == null) {
+        if (bankQueryFileId_ == null) {
             return;
         }
         synchronized (mSubscriptionStatusLock) {
-            DriveFile file = Drive.DriveApi.getFile(mGoogleApiClient, mQueryFileId);
+            DriveFile file = Drive.DriveApi.getFile(mGoogleApiClient, bankQueryFileId_);
             Log.d(TAG, "Starting to listen to the file changes.");
             // file.addChangeListener(mGoogleApiClient, changeListener);
             file.addChangeSubscription(mGoogleApiClient);
